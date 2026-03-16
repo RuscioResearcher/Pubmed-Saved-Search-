@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Research Digest</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0b0d;--s1:#111316;--s2:#181b1f;--s3:#1e2126;
+  --b1:#23272e;--b2:#2e343d;--b3:#3a4149;
+  --t1:#eceef0;--t2:#9ba3ad;--t3:#5a6370;--t4:#363d45;
+  --green:#3ecf8e;--gd:#0d2a1e;--gb:rgba(62,207,142,0.18);
+  --amber:#f0a429;--ad:#271c08;--ab:rgba(240,164,41,0.15);
+  --red:#e5534b;--rd:#270d0b;
+  --blue:#4d9cf8;--bd:#0a1a2e;
+  --mono:monospace;--sans:system-ui,sans-serif;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px}
+a{color:var(--blue);text-decoration:none}
+button{font-family:var(--sans);cursor:pointer}
+textarea,input{font-family:var(--mono);color:var(--t1)}
+
+/* layout */
+#app{display:grid;grid-template-columns:252px 1fr;min-height:100vh}
+
+/* sidebar */
+#sidebar{background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden}
+.sb-top{padding:22px 18px 14px;border-bottom:1px solid var(--b1)}
+.logo{font-size:18px;font-weight:600;color:var(--t1)}.logo span{color:var(--green)}
+.logo-sub{font-size:10px;color:var(--t4);font-family:var(--mono);letter-spacing:0.08em;margin-top:4px}
+.sb-mid{flex:1;overflow-y:auto;padding:8px 0}
+.sb-lbl{font-size:9px;color:var(--t4);font-family:var(--mono);letter-spacing:0.12em;text-transform:uppercase;padding:14px 18px 5px}
+.nav{display:flex;align-items:center;gap:8px;padding:7px 10px;margin:1px 8px;border-radius:7px;cursor:pointer;font-size:12.5px;color:var(--t3);transition:all 0.12s;border:1px solid transparent}
+.nav:hover{background:var(--s2);color:var(--t2)}
+.nav.on{background:var(--gd);color:var(--green);border-color:var(--gb)}
+.nav-ct{margin-left:auto;font-size:10px;background:var(--s3);padding:1px 6px;border-radius:8px;color:var(--t4);font-family:var(--mono)}
+.nav-ct.hot{background:var(--gd);color:var(--green)}
+.chips{padding:4px 10px 10px;display:flex;flex-wrap:wrap;gap:3px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:14px;font-size:10px;border:1px solid var(--b2);color:var(--t4);cursor:pointer;transition:all 0.1s;font-family:var(--mono)}
+.chip:hover{border-color:var(--green);color:var(--green)}
+.chip.on{background:var(--gd);border-color:var(--gb);color:var(--green)}
+.sb-bot{padding:12px 14px;border-top:1px solid var(--b1)}
+.key-lbl{font-size:10px;color:var(--t4);font-family:var(--mono);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px;display:flex;justify-content:space-between}
+.key-ok{color:var(--green)}
+.key-in{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--t1);outline:none;transition:border-color 0.12s}
+.key-in:focus{border-color:var(--green)}
+
+/* main */
+#main{display:flex;flex-direction:column;min-height:100vh}
+.topbar{padding:15px 26px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:12px;background:var(--s1);position:sticky;top:0;z-index:10}
+.tb-title{font-size:18px;font-weight:600;color:var(--t1);flex:1}
+.tb-sub{font-size:11px;color:var(--t4);font-family:var(--mono);margin-top:2px}
+.content{flex:1;padding:22px 26px;max-width:860px}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.stat{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:13px 14px}
+.stat-n{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--t1);line-height:1}
+.stat-l{font-size:11px;color:var(--t4);margin-top:4px}
+.stat.hi .stat-n{color:var(--green)}.stat.am .stat-n{color:var(--amber)}
+
+/* section head */
+.sh{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sh-t{font-size:9px;color:var(--t4);font-family:var(--mono);letter-spacing:0.12em;text-transform:uppercase;white-space:nowrap}
+.sh-l{flex:1;height:1px;background:var(--b1)}
+
+/* pills */
+.pill{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:10px;white-space:nowrap;display:inline-block}
+.p-g{background:var(--gd);color:var(--green)}.p-a{background:var(--ad);color:var(--amber)}
+.p-b{background:var(--s2);color:var(--t3)}.p-r{background:var(--rd);color:var(--red)}
+.p-blue{background:var(--bd);color:var(--blue)}
+
+/* buttons */
+.btn{font-size:11px;font-weight:500;padding:4px 11px;border-radius:6px;border:1px solid var(--b2);background:transparent;color:var(--t3);cursor:pointer;transition:all 0.12s;white-space:nowrap}
+.btn:hover{background:var(--s2);color:var(--t1)}
+.btn.g{background:var(--gd);border-color:var(--gb);color:var(--green)}
+.btn.g:hover{background:rgba(62,207,142,0.2)}
+.btn.r{background:var(--rd);border-color:rgba(229,83,75,0.2);color:var(--red)}
+.btn.a{background:var(--ad);border-color:var(--ab);color:var(--amber)}
+.btn.blue{background:var(--bd);border-color:rgba(77,156,248,0.2);color:var(--blue)}
+.btn-run{display:flex;align-items:center;gap:6px;background:var(--green);color:#051a0f;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.12s;white-space:nowrap;flex-shrink:0}
+.btn-run:hover{background:#5ef7b0}
+.btn-run:disabled{background:var(--s3);color:var(--t4);cursor:not-allowed}
+.fbb{background:transparent;border:1px solid var(--b2);border-radius:5px;cursor:pointer;padding:3px 8px;font-size:13px;transition:all 0.12s;line-height:1}
+.fbb:hover{background:var(--s2)}.fbb.up{background:var(--gd);border-color:var(--gb)}.fbb.dn{background:var(--rd);border-color:rgba(229,83,75,0.3)}
+
+/* email rows */
+.erow{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:11px 14px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.12s}
+.erow:hover{border-color:var(--b2);background:var(--s2)}
+.erow.sel{border-color:var(--gb);background:var(--gd)}
+.e-topic{font-size:13px;font-weight:600;color:var(--t1)}
+.e-meta{font-size:11px;color:var(--t4);font-family:var(--mono);margin-top:2px}
+
+/* title cards */
+.tcard{background:var(--s1);border:1px solid var(--b1);border-radius:10px;margin-bottom:6px;display:flex;align-items:flex-start;gap:12px;padding:12px 14px}
+.tcard.flagged{border-left:2px solid var(--green)}
+.tcard.skipped{border-left:2px solid var(--b3);opacity:0.4}
+.tcard.scanning{border-color:var(--amber);opacity:0.7}
+.tc-main{flex:1;min-width:0}
+.tc-title{font-size:12.5px;font-weight:600;color:var(--t1);line-height:1.4;margin-bottom:4px}
+.tc-reason{font-size:11px;color:var(--t3);font-family:var(--mono);line-height:1.5}
+.tc-actions{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+
+/* summary cards */
+.scard{background:var(--s1);border:1px solid var(--b1);border-radius:12px;margin-bottom:10px;padding:14px 16px}
+.scard.done{border-left:3px solid var(--green)}
+.scard.loading{border-color:var(--amber)}
+.sc-hdr{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.sc-title{font-size:13px;font-weight:600;color:var(--t1);line-height:1.4;flex:1}
+.sc-body{font-size:11.5px;color:var(--t2);line-height:1.8;margin-bottom:10px;white-space:pre-wrap;font-family:var(--mono)}
+.sc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.tag{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:12px;border:1px solid var(--b2);color:var(--t4)}
+.sc-footer{display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1px solid var(--b1);flex-wrap:wrap}
+
+/* tabs */
+.tabs{display:flex;gap:3px;margin-bottom:14px;padding:3px;background:var(--s2);border-radius:8px;border:1px solid var(--b1);width:fit-content}
+.tab{font-size:11px;font-family:var(--mono);padding:5px 13px;border-radius:6px;cursor:pointer;color:var(--t3);transition:all 0.12s;display:flex;align-items:center;gap:5px;border:1px solid transparent;white-space:nowrap}
+.tab:hover{color:var(--t2)}.tab.on{background:var(--s1);border-color:var(--b2);color:var(--t1)}
+.tab-n{font-size:9px;background:var(--s3);padding:1px 5px;border-radius:7px;color:var(--t4)}
+.tab.on .tab-n{background:var(--gd);color:var(--green)}
+
+/* banner */
+.banner{padding:12px 14px;border-radius:9px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px}
+.banner.amber{background:var(--ad);border:1px solid var(--ab)}
+.banner.blue{background:var(--bd);border:1px solid rgba(77,156,248,0.2)}
+.banner-txt{font-size:11.5px;line-height:1.65;font-family:var(--mono)}
+.banner.amber .banner-txt{color:var(--amber)}.banner.blue .banner-txt{color:var(--blue)}
+.banner-txt strong{color:#fcd34d}.banner.blue .banner-txt strong{color:#93c5fd}
+
+/* log */
+.log{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:9px 12px;margin-bottom:14px;font-family:var(--mono);font-size:11px;line-height:1.8;max-height:90px;overflow-y:auto}
+.l-ok{color:var(--green)}.l-am{color:var(--amber)}.l-er{color:var(--red)}.l-dim{color:var(--t4)}
+
+/* settings */
+.sc-card{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:20px;margin-bottom:14px}
+.sc-title{font-size:16px;font-weight:600;margin-bottom:4px}
+.sc-sub{font-size:12px;color:var(--t3);margin-bottom:16px;line-height:1.6}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.f-lbl{font-size:9px;color:var(--t4);font-family:var(--mono);letter-spacing:0.1em;text-transform:uppercase}
+.f-in{background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:8px 11px;font-size:12px;color:var(--t1);outline:none;transition:border-color 0.12s;width:100%}
+.f-in:focus{border-color:var(--green)}
+.f-ta{min-height:280px;resize:vertical;line-height:1.6;font-size:11px}
+.f-hint{font-size:10px;color:var(--t4);margin-top:3px;font-family:var(--mono);line-height:1.5}
+
+/* training */
+.ex-card{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.ex-title{font-size:12px;font-weight:600;color:var(--t1);margin-bottom:3px}
+.ex-meta{font-size:10px;font-family:var(--mono);color:var(--t4);margin-bottom:5px}
+.ex-out{font-size:10.5px;color:var(--t3);line-height:1.6;white-space:pre-wrap;font-family:var(--mono)}
+.ex-rm{font-size:10px;color:var(--red);font-family:var(--mono);cursor:pointer;float:right}
+
+/* modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:50;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--s1);border:1px solid var(--b2);border-radius:13px;padding:22px;width:100%;max-width:580px;max-height:80vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:4px}
+.modal-sub{font-size:11px;color:var(--t4);font-family:var(--mono);margin-bottom:11px;line-height:1.5}
+.modal-ta{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:10px;font-size:11px;color:var(--t1);line-height:1.65;outline:none;resize:vertical;min-height:180px}
+.modal-ta:focus{border-color:var(--green)}
+.modal-ft{display:flex;justify-content:flex-end;gap:7px;margin-top:11px}
+.btn-md{font-size:12px;font-weight:500;padding:7px 16px;border-radius:7px;border:1px solid var(--b2);background:transparent;color:var(--t3);cursor:pointer}
+.btn-md:hover{background:var(--s2);color:var(--t1)}
+.btn-md.p{background:var(--green);color:#051a0f;border-color:var(--green)}
+.btn-md.p:hover{background:#5ef7b0}
+
+/* toast */
+.toast{position:fixed;bottom:18px;right:18px;background:var(--s1);border:1px solid var(--b2);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--t1);z-index:100;display:flex;align-items:center;gap:8px;max-width:340px;display:none}
+.toast.show{display:flex}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.toast-dot.w{background:var(--amber)}.toast-dot.e{background:var(--red)}
+
+.empty{text-align:center;padding:40px;color:var(--t4)}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(0,0,0,0.25);border-top-color:#051a0f;border-radius:50%;animation:sp 0.65s linear infinite;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--b3);border-radius:2px}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div class="sb-top">
+      <div class="logo">Research<span>Digest</span></div>
+      <div class="logo-sub">two-pass · pubmed · claude</div>
+    </div>
+    <div class="sb-mid">
+      <div class="sb-lbl">Navigation</div>
+      <div class="nav on" data-view="inbox" onclick="setView('inbox')">📥 Inbox <span class="nav-ct hot" id="nav-inbox-ct">5</span></div>
+      <div class="nav" data-view="results" onclick="setView('results')">🔍 Review <span class="nav-ct" id="nav-results-ct">0</span></div>
+      <div class="nav" data-view="training" onclick="setView('training')">🧠 Training <span class="nav-ct" id="nav-training-ct">0</span></div>
+      <div class="nav" data-view="settings" onclick="setView('settings')">⚙ Settings</div>
+      <div class="sb-lbl">Topic filter</div>
+      <div class="chips" id="topic-chips"></div>
+    </div>
+    <div class="sb-bot">
+      <div class="key-lbl">API key <span class="key-ok" id="key-status" style="display:none">● live</span></div>
+      <input class="key-in" type="password" id="api-key-input" placeholder="sk-ant-api03-..." oninput="onApiKeyChange(this.value)"/>
+    </div>
+  </aside>
+
+  <main id="main">
+    <div class="topbar">
+      <div style="flex:1">
+        <div class="tb-title" id="page-title">Inbox</div>
+        <div class="tb-sub" id="page-sub"></div>
+      </div>
+      <button class="btn-run" id="topbar-btn" style="display:none" onclick="topbarAction()">Scan next email</button>
+    </div>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal-box">
+    <div class="modal-title">Edit summary</div>
+    <div class="modal-sub" id="edit-modal-sub"></div>
+    <textarea class="modal-ta" id="edit-modal-ta" rows="10"></textarea>
+    <div class="modal-ft">
+      <button class="btn-md" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-md p" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><div class="toast-dot" id="toast-dot"></div><span id="toast-msg"></span></div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+var state = {
+  apiKey: ls('rd4_key',''),
+  docId:  ls('rd4_doc',''),
+  p1prompt: ls('rd4_p1', P1_DEFAULT()),
+  p2prompt: ls('rd4_p2', P2_DEFAULT()),
+  examples: ls('rd4_ex', []),
+  topics:   ls('rd4_topics', TOPICS()),
+  view:     'inbox',
+  emails:   EMAILS(),
+  studies:  {},
+  selEmail: null,
+  scanning: false,
+  logs:     [],
+  resultTab: 'flagged',
+  settingsTab: 'p1',
+  calMode:  true,
+  editingStudyId: null,
+  toastTimer: null,
+};
+
+function TOPICS(){ return ['Probiotics','Gut dysbiosis','MCAS','Dysautonomia','Bartonella','Babesia','SIBO/IMO','LDN','CIRS','Mycotoxin','hEDS','Thyroid','Longevity','Sauna/RLT','SIFO']; }
+
+function EMAILS(){ return [
+  {id:'e1',topic:'Probiotics and gut health',count:8,date:'Today, 6:02 AM',status:'new'},
+  {id:'e2',topic:'SIBO and IMO',count:6,date:'Today, 6:02 AM',status:'new'},
+  {id:'e3',topic:'MCAS',count:5,date:'Yesterday',status:'new'},
+  {id:'e4',topic:'Tick-borne illness',count:5,date:'Yesterday',status:'new'},
+  {id:'e5',topic:'Dysautonomia and POTS',count:4,date:'2 days ago',status:'new'},
+];}
+
+function STUDIES(){ return {
+  e1:[
+    {id:'s1',title:'Bifidobacterium breve reduces cortisol and improves sleep in high-stress adults: RCT',doi:'10.1016/j.bbi.2024.01.012',year:2024,abstract:'RCT of 120 adults with high stress, high BMI, insomnia, or constipation randomized to placebo or B. breve (10B or 50B CFU/day) for 4 weeks. Probiotic group showed significant increases in GABA, reductions in ACTH and cortisol, improved sleep scores, and improved constipation. Both doses effective.'},
+    {id:'s2',title:'Probiotics, synbiotics, and prebiotics improve intestinal permeability: meta-analysis of 24 RCTs',doi:'10.1136/gutjnl-2024-332891',year:2025,abstract:'Meta-analysis of 24 RCTs with 1603 subjects. Probiotics and synbiotics improved serum LPS after 3+ months and improved serum zonulin. No change in fecal calprotectin. Prebiotics improved LPS after 2+ months.'},
+    {id:'s3',title:'Lactobacillus eliminates urinary oxalate crystals in calcium stone formers: clinical trial',doi:'10.1016/j.eururo.2024.03.018',year:2024,abstract:'20 patients with calcium oxalate kidney stones. Lacto/Bifido probiotic 3B CFU/day plus potassium citrate 1400mg plus magnesium 80mg for 20 days. 100% crystal-free at 1 and 3 months. 25% recurrence at 1 year.'},
+    {id:'s4',title:'Probiotic supplementation improves ADHD symptoms in college students: RCT',doi:'10.1016/j.nut.2024.112234',year:2024,abstract:'RCT of 60 college students with ADHD. Lacto/Bifido probiotic 40B CFU/day. Improved hyperactivity, academic grades, and GI symptoms vs placebo.'},
+    {id:'s5',title:'Gut microbiome transplantation in pediatric Crohns disease: multicenter RCT',doi:'10.1542/peds.2024-065891',year:2024,abstract:'Multicenter RCT of 180 pediatric Crohns patients ages 6-17. FMT vs standard therapy. Pediatric-specific protocols. No adult data.'},
+    {id:'s6',title:'Akkermansia muciniphila supplementation reduces metabolic syndrome markers: RCT',doi:'10.1016/j.cmet.2024.02.001',year:2024,abstract:'RCT of 32 adults with metabolic syndrome. Pasteurized A. muciniphila 10 billion bacteria per day for 3 months. Improved insulin sensitivity, reduced visceral fat, improved gut barrier.'},
+    {id:'s7',title:'Synbiotic use in canine inflammatory bowel disease: veterinary cohort',doi:'10.1111/jvim.2024.0234',year:2024,abstract:'Veterinary cohort of 85 dogs with IBD. Lacto/Bifido synbiotic for 8 weeks. Improved disease scores. Fecal microbiome analysis. Veterinary application only, no human data.'},
+    {id:'s8',title:'Saccharomyces boulardii for prevention of antibiotic-associated diarrhea: meta-analysis',doi:'10.1111/apt.18234',year:2025,abstract:'Meta-analysis of 42 RCTs with 8672 patients. S. boulardii significantly reduced AAD risk (RR 0.52). Effect strongest with broad-spectrum antibiotics. Includes adult and pediatric data.'},
+  ],
+  e2:[
+    {id:'s9',title:'SIBO breath test positivity rates and gas-symptom correlations: observational study of 3000+ samples',doi:'10.1016/j.cgh.2025.11.003',year:2026,abstract:'Observational study of over 3000 Triosmart breath test samples. SIBO positivity: lactulose 27%, glucose 7%. H2 correlates with diarrhea. CH4 correlates with constipation and pain. H2S correlates with diarrhea, urgency, and pain. Suggested H2S cutoff of 2 ppm.'},
+    {id:'s10',title:'Rifaximin vs ciprofloxacin vs metronidazole for SIBO eradication in IBS: RCT',doi:'10.1053/j.gastro.2024.12.034',year:2025,abstract:'RCT of 97 IBS patients with confirmed SIBO. 10-day course: rifaximin 800mg/day, ciprofloxacin 1000mg/day, or metronidazole 1500mg/day. Eradication rates: rifaximin 59%, ciprofloxacin 53%, metronidazole 79%. Rifaximin best for pain and bloating. Metronidazole best for methane reduction from 10.8 to 6.83 ppm. Side effects: rifaximin 9%, others 40%.'},
+    {id:'s11',title:'Low FODMAP diet reduces mast cell activation markers in IBS-D: clinical trial',doi:'10.1053/j.gastro.2024.11.009',year:2025,abstract:'42 IBS-D patients on low FODMAP diet for 1 month. 81% achieved 100+ point IBS-SSS drop. Reduced mast cell numbers on biopsy, reduced histamine, PGE2, and tryptase. Authors noted FODMAP-mediated barrier dysfunction appears mediated by TLR4 activation on colonic mast cells by fecal LPS.'},
+    {id:'s12',title:'Auto Brewery Syndrome is bacterial not fungal: microbiome analysis and case report',doi:'10.1016/j.cell.2025.12.019',year:2026,abstract:'22 ABS patients showed high ethanol production with elevated E.coli and Klebsiella. Ethanol decreased with antibiotics but not antifungals. Case achieved remission with antibiotics plus 2 FMTs after antifungal failure.'},
+    {id:'s13',title:'Probiotic supplementation in equine gastric ulcer: randomized veterinary trial',doi:'10.1111/evj.2024.0891',year:2024,abstract:'Equine RCT of 40 horses with gastric ulcer syndrome. Lactobacillus probiotic vs omeprazole. Endoscopic ulcer scoring. Veterinary application only. No human data.'},
+    {id:'s14',title:'Elemental diet vs low FODMAP for SIBO symptom control: crossover RCT',doi:'10.1016/j.cgh.2024.08.019',year:2025,abstract:'Crossover RCT of 38 SIBO patients. Elemental diet for 2 weeks vs low FODMAP. Elemental superior for breath test normalization. FODMAP superior for symptom scores at 8 weeks. Both improved quality of life.'},
+  ],
+  e3:[
+    {id:'s15',title:'High-dose oral cromolyn sodium for CFS and MCAS: Johns Hopkins case series',doi:'10.1016/j.jaip.2025.01.024',year:2025,abstract:'5 patients with CFS plus MCAS treated with high-dose continuous oral cromolyn sodium. All 5 improved. Symptoms improved included flushing, hives, POTS, energy, PEM, step counts, and GI symptoms. Protocol: escalate 400mg to 1600mg per day over 4 weeks. Doses of 1600 to 2400mg per day were well tolerated. Many worsened when stopped then improved after restart.'},
+    {id:'s16',title:'DAO enzyme supplementation reduces histamine intolerance symptoms: meta-analysis of 8 RCTs',doi:'10.1111/apt.18012',year:2025,abstract:'8 RCTs. DAO supplementation before high-histamine meals reduced symptom severity by 47% vs placebo. Pea sprout DAO most studied. No serious adverse events.'},
+    {id:'s17',title:'Mast cell tryptase as MCAS diagnostic biomarker: systematic review',doi:'10.1016/j.jaci.2024.08.003',year:2024,abstract:'15 studies. Baseline tryptase sensitivity 31%, specificity 89%. Authors recommend against relying on single tryptase measurement. Clinical diagnosis possible without elevated tryptase.'},
+    {id:'s18',title:'Ketotifen vs cromolyn for mast cell stabilization: comparative effectiveness in 203 patients',doi:'10.1016/j.anai.2024.01.005',year:2024,abstract:'203 MCAS patients retrospective review. Comparable efficacy overall. Ketotifen associated with more sedation. Cromolyn better for GI-predominant symptoms.'},
+    {id:'s19',title:'Mast cell activation in agricultural workers exposed to organophosphate pesticides',doi:'10.1016/j.envint.2024.108901',year:2024,abstract:'Cross-sectional study of 312 agricultural workers. Elevated tryptase, histamine, and IL-6 vs controls. Occupational pesticide exposure correlation. No therapeutic intervention studied.'},
+  ],
+  e4:[
+    {id:'s20',title:'Bartonella henselae seropositivity in fibromyalgia and ME/CFS: prevalence study',doi:'10.1089/vbz.2024.0012',year:2025,abstract:'Cross-sectional study of 148 patients. Bartonella IgG seropositivity 31% in fibromyalgia/ME-CFS vs 8% in healthy controls (p<0.001). Galaxy Diagnostics FISH protocol used. Observational design only.'},
+    {id:'s21',title:'Neuropsychiatric manifestations of Bartonella infection: systematic review of 67 cases',doi:'10.1016/j.jinf.2024.106117',year:2025,abstract:'67 case reports and series. Presentations included encephalopathy, anxiety, OCD-like symptoms, seizures, and psychiatric deterioration. Cases in both immunocompromised and immunocompetent patients. Prolonged doxycycline and rifampin combinations improved majority.'},
+    {id:'s22',title:'Three European Babesia cases with atypical presentations: case series',doi:'10.1093/cid/ciae441',year:2025,abstract:'3 Italian cases. Case 1: B. canis canis resolved with atovaquone 750mg BID plus azithromycin 500mg daily for 10 days. Case 2: child with B. microti-like resolved with azithromycin plus atovaquone for 7 days. Case 3: B. vulpes misdiagnosed as TB, required 21 days of quinine plus clindamycin. None recalled tick bite. All diagnosed by blood smear.'},
+    {id:'s23',title:'Azithromycin plus atovaquone failure predictors in immunocompromised Babesia: cohort study',doi:'10.1093/cid/ciae128',year:2024,abstract:'89 immunocompromised Babesia microti patients. Failure rate 28%. Predictors included B-cell depletion, asplenia, and high initial parasitemia. Authors recommend extended treatment.'},
+    {id:'s24',title:'Tick surveillance and Borrelia prevalence in northeastern US: entomological survey',doi:'10.3390/pathogens2024.0441',year:2024,abstract:'Entomological survey of 4200 Ixodes scapularis ticks from 8 northeastern states. Borrelia burgdorferi prevalence by county. No human subjects. Epidemiological mapping only.'},
+  ],
+  e5:[
+    {id:'s25',title:'Ivabradine dose optimization in hyperadrenergic POTS: open-label crossover study',doi:'10.1161/CIRCEP.123.012541',year:2024,abstract:'38 hyperadrenergic POTS patients compared ivabradine 5mg vs 7.5mg BID. Higher dose gave greater HR reduction and symptom improvement but more visual disturbances and bradycardia. Recommend starting at 5mg BID and titrating.'},
+    {id:'s26',title:'Stellate ganglion block for long-COVID dysautonomia: 24-patient prospective case series',doi:'10.1097/ANA.0000000000000944',year:2025,abstract:'24 long-COVID dysautonomia patients received right-sided SGB. 18 of 24 showed significant HRV improvement at 4 weeks. Improved fatigue, cognition, and orthostatic tolerance. Response predictors included shorter symptom duration and higher baseline sympathetic tone.'},
+    {id:'s27',title:'Low-dose naltrexone for autonomic dysfunction in ME/CFS: pilot RCT',doi:'10.1016/j.autrev.2024.103578',year:2024,abstract:'30 ME/CFS patients with autonomic dysfunction. LDN 4.5mg nightly vs placebo for 12 weeks. Improved HRV, reduced sympathetic dominance, improved fatigue scores. No change in orthostatic vitals. Small sample limits generalizability.'},
+    {id:'s28',title:'Compression garment therapy for orthostatic hypotension in Parkinsons disease: RCT',doi:'10.1016/j.parkreldis.2024.106234',year:2024,abstract:'RCT of 44 Parkinsons patients with orthostatic hypotension. Abdominal binder vs sham compression. Parkinsons-specific neurogenic context only.'},
+  ],
+};}
+
+function P1_DEFAULT(){ return `You are a title screener for a functional medicine clinical research digest focused on Dr. Michael Ruscio's clinical model.
+
+PATIENT POPULATION: Adults with tick-borne illness (Bartonella, Babesia, Borrelia), MCAS, dysautonomia/POTS, gut dysbiosis, SIBO/IMO, neuroinflammation, hEDS, CIRS, mycotoxin illness, SIFO, thyroid illness, longevity (sauna, red light therapy). Heavily probiotic-oriented. Root-cause focused.
+
+YOUR ONLY JOB: Look at each title and score how likely this study is worth reading the abstract.
+
+SCORING:
+8-10: Title clearly relevant - RCT or meta-analysis directly matching patient population
+5-7: Title possibly relevant - could match if abstract confirms
+2-4: Title tangentially related - small chance worth a look
+0-1: CLEARLY irrelevant - veterinary only, agricultural only, purely surgical, or completely unrelated to any health topic
+
+CRITICAL: When in doubt, score HIGHER. A missed good study is worse than reviewing one extra abstract. Score 0-1 ONLY when you are certain.
+
+You will receive a numbered list of titles. Return ONLY a valid JSON array - no other text:
+[{"id":"s1","score":8,"flag":true,"reason":"brief phrase max 8 words"},...]
+
+flag = true if score >= 4`; }
+
+function P2_DEFAULT(){ return `You are a clinical research analyst for a functional medicine practice specializing in complex chronic illness, emphasizing studies Dr. Michael Ruscio finds clinically relevant.
+
+PATIENT POPULATION: Adults with tick-borne illness (Bartonella, Babesia, Borrelia), MCAS, dysautonomia/POTS, gut dysbiosis, SIBO/IMO, neuroinflammation, hEDS, CIRS, mycotoxin illness, SIFO, gut-health, thyroid illness, longevity (sauna, red light therapy). Heavily probiotic-oriented. Root-cause, not symptom suppression.
+
+OUTPUT FORMAT - use this exact bullet structure, ready to paste into Google Doc:
+
+[YEAR] [study type] (X)
+- [main finding - include n= when available]
+  - [sub-bullet with key detail]
+  - [sub-bullet with key detail]
+- Other notes:
+  - [clinically relevant point]
+- Clinical take: [one sentence how this changes or confirms practice]
+- Watch for: [one limitation or caveat]
+- Quote (only if compelling): "[exact quote from abstract]"
+
+FORMAT RULES:
+- Use -> to show relationships (H2 -> diarrhea)
+- Use up and down arrows for increases/decreases
+- Include dose and duration when applicable
+- (X) is a placeholder for the hyperlink - always include it
+- Include dosing protocols as sub-bullets when present
+- Every bullet must add new information
+
+Return ONLY valid JSON - no markdown, no backticks, no extra text:
+{"formatted_output":"...","tags":["tag1","tag2"],"final_score":8,"reason":"one sentence note"}`; }
+
+// ── LOCAL STORAGE ─────────────────────────────────────────────────────────────
+function ls(k,d){try{var v=localStorage.getItem(k);return v!=null?JSON.parse(v):d}catch(e){return d}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function callClaude(system, user, maxTokens){
+  var res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': state.apiKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens: maxTokens||400,
+      system: system,
+      messages:[{role:'user',content:user}]
+    })
+  });
+  if(!res.ok){var t=await res.text();throw new Error('API '+res.status+': '+t.slice(0,80));}
+  var data = await res.json();
+  var raw = data.content[0].text.trim();
+  // strip any markdown fences
+  raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
+  return JSON.parse(raw);
+}
+
+async function doPass1(email){
+  if(!state.apiKey){toast('Add Anthropic API key in the sidebar first','w');return;}
+  if(state.scanning)return;
+  state.scanning = true;
+  var allStudies = STUDIES();
+  var raw = allStudies[email.id]||[];
+  // init studies
+  state.studies[email.id] = raw.map(function(s){
+    return Object.assign({},s,{scanning:true,p1score:null,p1flag:null,p1reason:null,
+      titleFb:null,summarizing:false,summarized:false,summary:null,
+      tags:[],finalScore:null,exported:false,discarded:false,sumFb:null});
+  });
+  state.selEmail = email.id;
+  state.view = 'results';
+  state.resultTab = 'flagged';
+  addLog('Pass 1 — scanning '+raw.length+' titles for '+email.topic,'ok');
+  render();
+
+  // build example block
+  var exBlock = '';
+  var gf = state.examples.filter(function(e){return e.type==='good_flag';}).slice(-4);
+  var bf = state.examples.filter(function(e){return e.type==='bad_flag';}).slice(-3);
+  var gs = state.examples.filter(function(e){return e.type==='rescued_skip';}).slice(-3);
+  if(gf.length||bf.length||gs.length){
+    exBlock = '\n\nLEARNED FROM USER FEEDBACK:';
+    if(gf.length){exBlock+='\nCorrectly flagged (keep catching these):';gf.forEach(function(e){exBlock+='\n- "'+e.title+'" score '+e.score;});}
+    if(bf.length){exBlock+='\nFalse positives (stop flagging these):';bf.forEach(function(e){exBlock+='\n- "'+e.title+'"';});}
+    if(gs.length){exBlock+='\nMissed - should have flagged:';gs.forEach(function(e){exBlock+='\n- "'+e.title+'"';});}
+  }
+  var list = raw.map(function(s,i){return (i+1)+'. ['+s.id+'] '+s.title;}).join('\n');
+  var user = 'Screen these study titles and return ONLY a valid JSON array:\n\n'+list;
+
+  try{
+    var results = await callClaude(state.p1prompt+exBlock, user, 1000);
+    if(!Array.isArray(results)){
+      if(results && results.results) results = results.results;
+      else throw new Error('Unexpected response format');
+    }
+    var byId = {};
+    results.forEach(function(r){byId[r.id]=r;});
+    state.studies[email.id] = state.studies[email.id].map(function(st){
+      var r = byId[st.id];
+      if(!r) return Object.assign({},st,{scanning:false,p1score:0,p1flag:false,p1reason:'No result'});
+      return Object.assign({},st,{scanning:false,p1score:r.score,p1flag:r.flag,p1reason:r.reason});
+    });
+    var flagCount = results.filter(function(r){return r.flag;}).length;
+    addLog('Done - '+flagCount+'/'+raw.length+' flagged for review','ok');
+    email.status = 'scanned';
+    toast('Title scan complete - '+flagCount+' flagged for review');
+  }catch(err){
+    state.studies[email.id] = state.studies[email.id].map(function(st){
+      return Object.assign({},st,{scanning:false,p1score:0,p1flag:false,p1reason:'Error: '+err.message});
+    });
+    addLog('Error: '+err.message,'e');
+    toast('Scan failed: '+err.message,'e');
+  }
+  state.scanning = false;
+  render();
+}
+
+async function doSummarize(studyId){
+  if(!state.apiKey){toast('Add Anthropic API key first','w');return;}
+  var emailStudies = state.studies[state.selEmail];
+  if(!emailStudies)return;
+  var study = emailStudies.find(function(s){return s.id===studyId;});
+  if(!study)return;
+  updateStudy(state.selEmail,studyId,{summarizing:true});
+  state.resultTab = 'summaries';
+  addLog('Summarizing: '+study.title.slice(0,55)+'...');
+  render();
+
+  var exBlock = '';
+  var gs = state.examples.filter(function(e){return e.type==='good_summary';}).slice(-3);
+  var bs = state.examples.filter(function(e){return e.type==='bad_summary';}).slice(-2);
+  if(gs.length){exBlock+='\n\nEXAMPLES OF IDEAL FORMAT:\n';gs.forEach(function(e){exBlock+='\nTitle: "'+e.title+'"\n'+e.output+'\n---';});}
+  if(bs.length){exBlock+='\n\nAVOID THESE PATTERNS:\n';bs.forEach(function(e){exBlock+='\nTitle: "'+e.title+'"\nBad:\n'+e.output+'\n---';});}
+
+  var user = 'Title: '+study.title+'\nYear: '+(study.year||'unknown')+'\nDOI: '+(study.doi||'n/a')+'\nAbstract: '+study.abstract;
+  try{
+    var res = await callClaude(state.p2prompt+exBlock, user, 1200);
+    updateStudy(state.selEmail,studyId,{
+      summarizing:false,summarized:true,
+      summary:res.formatted_output,
+      tags:res.tags||[],
+      finalScore:res.final_score,
+    });
+    addLog('Summary done - final score '+res.final_score+'/10','ok');
+  }catch(err){
+    updateStudy(state.selEmail,studyId,{summarizing:false,summary:'Error: '+err.message});
+    addLog('Error: '+err.message,'e');
+    toast('Summary failed: '+err.message,'e');
+  }
+  render();
+}
+
+// ── STATE HELPERS ─────────────────────────────────────────────────────────────
+function updateStudy(emailId,studyId,patch){
+  if(!state.studies[emailId])return;
+  state.studies[emailId] = state.studies[emailId].map(function(s){
+    return s.id===studyId ? Object.assign({},s,patch) : s;
+  });
+}
+
+function addLog(msg,t){
+  state.logs.push({msg:msg,t:t||'',ts:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
+}
+
+function addExample(ex){
+  var filtered = state.examples.filter(function(e){return e.id!==ex.id;});
+  filtered.push(ex);
+  if(filtered.length>40) filtered = filtered.slice(-40);
+  state.examples = filtered;
+  lsSet('rd4_ex',state.examples);
+}
+
+function onApiKeyChange(v){
+  state.apiKey = v;
+  lsSet('rd4_key',v);
+  document.getElementById('key-status').style.display = v?'':'none';
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg,type){
+  clearTimeout(state.toastTimer);
+  var el = document.getElementById('toast');
+  var dot = document.getElementById('toast-dot');
+  document.getElementById('toast-msg').textContent = msg;
+  dot.className = 'toast-dot'+(type==='w'?' w':type==='e'?' e':'');
+  el.classList.add('show');
+  state.toastTimer = setTimeout(function(){el.classList.remove('show');},4000);
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openEditModal(studyId){
+  var emailStudies = state.studies[state.selEmail];
+  if(!emailStudies)return;
+  var study = emailStudies.find(function(s){return s.id===studyId;});
+  if(!study)return;
+  state.editingStudyId = studyId;
+  document.getElementById('edit-modal-sub').textContent = study.title;
+  document.getElementById('edit-modal-ta').value = study.summary||'';
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEditModal(){
+  document.getElementById('edit-modal').classList.remove('open');
+  state.editingStudyId = null;
+}
+function saveEdit(){
+  if(!state.editingStudyId)return;
+  var txt = document.getElementById('edit-modal-ta').value;
+  updateStudy(state.selEmail,state.editingStudyId,{summary:txt});
+  closeEditModal();
+  render();
+}
+
+// ── VIEW ──────────────────────────────────────────────────────────────────────
+function setView(v){
+  state.view = v;
+  render();
+}
+
+function setResultTab(t){
+  state.resultTab = t;
+  render();
+}
+
+function setSettingsTab(t){
+  state.settingsTab = t;
+  render();
+}
+
+function topbarAction(){
+  if(state.view==='inbox'){
+    var next = state.emails.find(function(e){return e.status==='new';});
+    if(next) doPass1(next);
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function pill(score){
+  var cls = score>=8?'p-g':score>=5?'p-a':score>=2?'p-b':'p-r';
+  return '<span class="pill '+cls+'">'+score+'/10</span>';
+}
+
+function render(){
+  // save persistent state
+  lsSet('rd4_key',state.apiKey);
+  lsSet('rd4_p1',state.p1prompt);
+  lsSet('rd4_p2',state.p2prompt);
+  lsSet('rd4_topics',state.topics);
+
+  // nav highlight
+  document.querySelectorAll('.nav').forEach(function(el){
+    el.classList.toggle('on', el.dataset.view===state.view);
+  });
+
+  // nav counts
+  var newCount = state.emails.filter(function(e){return e.status==='new';}).length;
+  document.getElementById('nav-inbox-ct').textContent = newCount;
+  document.getElementById('nav-inbox-ct').className = 'nav-ct'+(newCount>0?' hot':'');
+
+  var sel = state.selEmail && state.studies[state.selEmail] || [];
+  var flagged = sel.filter(function(s){return !s.scanning&&(s.p1flag||s.titleFb==='up')&&!s.discarded;});
+  document.getElementById('nav-results-ct').textContent = flagged.length;
+  document.getElementById('nav-training-ct').textContent = state.examples.length||0;
+
+  // totals
+  var allStudies = [].concat.apply([],Object.values(state.studies));
+  var totalScanned = allStudies.filter(function(s){return s.p1score!=null;}).length;
+  var totalFlagged = allStudies.filter(function(s){return s.p1flag&&!s.discarded;}).length;
+  var totalSummarized = allStudies.filter(function(s){return s.summarized;}).length;
+  var totalExported = allStudies.filter(function(s){return s.exported;}).length;
+
+  var skipped = sel.filter(function(s){return !s.scanning&&(s.discarded||(s.p1flag===false&&s.titleFb!=='up'));});
+  var summaries = sel.filter(function(s){return (s.summarized||s.summarizing)&&!s.discarded;});
+
+  // api key status
+  document.getElementById('key-status').style.display = state.apiKey?'':'none';
+  document.getElementById('api-key-input').value = state.apiKey||'';
+
+  // topbar
+  var btn = document.getElementById('topbar-btn');
+  if(state.view==='inbox'){
+    btn.style.display='flex';
+    btn.disabled = state.scanning||!state.apiKey;
+    btn.innerHTML = state.scanning?'<span class="spin"></span> Scanning...':'Scan next email';
+  } else {
+    btn.style.display='none';
+  }
+
+  // topic chips
+  var chipsEl = document.getElementById('topic-chips');
+  chipsEl.innerHTML = TOPICS().map(function(t){
+    var on = state.topics.indexOf(t)>=0;
+    return '<span class="chip'+(on?' on':'')+'" onclick="toggleTopic(\''+t+'\')">'
+      +'<span style="width:4px;height:4px;border-radius:50%;background:currentColor;display:inline-block;vertical-align:middle;margin-right:3px"></span>'+t+'</span>';
+  }).join('');
+
+  // page title + sub
+  var titles = {inbox:'Inbox',results:state.selEmail?(state.emails.find(function(e){return e.id===state.selEmail;})||{}).topic||'Review':'Review',training:'Training examples',settings:'Settings'};
+  document.getElementById('page-title').textContent = titles[state.view]||'';
+  var subs = {
+    inbox: newCount+' unscanned · '+totalScanned+' titles reviewed · '+totalSummarized+' summaries',
+    results: state.selEmail ? flagged.length+' flagged · '+skipped.length+' skipped · '+summaries.length+' summarized' : '',
+    training: state.examples.filter(function(e){return ['good_flag','bad_flag','rescued_skip'].includes(e.type);}).length+' title examples · '+state.examples.filter(function(e){return e.type==='good_summary';}).length+' good summaries',
+    settings: 'Configure prompts and connections'
+  };
+  document.getElementById('page-sub').textContent = subs[state.view]||'';
+
+  // content
+  var html = '';
+  if(state.view==='inbox') html = renderInbox(totalScanned,totalFlagged,totalSummarized,totalExported);
+  if(state.view==='results') html = renderResults(sel,flagged,skipped,summaries);
+  if(state.view==='training') html = renderTraining();
+  if(state.view==='settings') html = renderSettings();
+  document.getElementById('content').innerHTML = html;
+}
+
+function toggleTopic(t){
+  var idx = state.topics.indexOf(t);
+  if(idx>=0) state.topics.splice(idx,1);
+  else state.topics.push(t);
+  lsSet('rd4_topics',state.topics);
+  render();
+}
+
+function renderInbox(totalScanned,totalFlagged,totalSummarized,totalExported){
+  var scannedCount = state.emails.filter(function(e){return e.status==='scanned';}).length;
+  var calDone = scannedCount>=1 && totalSummarized>=2;
+  var html = '';
+
+  // stats
+  html += '<div class="stats">';
+  html += '<div class="stat"><div class="stat-n">'+state.emails.length+'</div><div class="stat-l">Emails</div></div>';
+  html += '<div class="stat"><div class="stat-n">'+totalScanned+'</div><div class="stat-l">Titles scanned</div></div>';
+  html += '<div class="stat hi"><div class="stat-n">'+totalFlagged+'</div><div class="stat-l">Flagged</div></div>';
+  html += '<div class="stat am"><div class="stat-n">'+totalSummarized+'</div><div class="stat-l">Summaries</div></div>';
+  html += '</div>';
+
+  // calibration banner
+  if(state.calMode){
+    html += '<div class="banner amber"><div style="font-size:15px;flex-shrink:0">🎯</div><div class="banner-txt">';
+    if(!calDone){
+      html += '<strong>Calibration mode.</strong> Start with one email. Review flagged titles, approve a few, run 2-3 summaries, then check the format matches your expectations before scanning more emails.';
+    } else {
+      html += '<strong>You have summaries to review!</strong> Check the Review tab. Happy with calibration? <span style="text-decoration:underline;cursor:pointer;color:#fcd34d" onclick="state.calMode=false;render()">Turn off calibration mode</span>';
+    }
+    html += '</div></div>';
+  }
+
+  html += '<div class="sh"><div class="sh-t">PubMed emails</div><div class="sh-l"></div></div>';
+
+  state.emails.forEach(function(email){
+    var sel = state.selEmail===email.id;
+    var scanning = state.scanning && state.selEmail===email.id;
+    html += '<div class="erow'+(sel?' sel':'')+'" onclick="selectEmail(\''+email.id+'\')">';
+    html += '<div style="flex:1"><div class="e-topic">'+email.topic+'</div><div class="e-meta">'+email.count+' studies &middot; '+email.date+'</div></div>';
+    html += '<div style="display:flex;align-items:center;gap:8px">';
+    if(email.status==='scanned'&&!scanning) html += '<span class="pill p-g">Scanned</span>';
+    else if(scanning) html += '<span class="pill p-a">Scanning...</span>';
+    else html += '<span class="pill p-b">New</span>';
+    if(email.status==='new'){
+      html += '<button class="btn blue" onclick="event.stopPropagation();doPass1(state.emails.find(function(e){return e.id===\''+email.id+'\'}))" '+(state.scanning||!state.apiKey?'disabled':'')+'>'+(scanning?'Scanning...':'Run pass 1')+'</button>';
+    }
+    html += '</div></div>';
+  });
+
+  // log
+  if(state.logs.length>0){
+    html += '<div class="sh" style="margin-top:16px"><div class="sh-t">Log</div><div class="sh-l"></div></div>';
+    html += '<div class="log" id="log-el">';
+    state.logs.forEach(function(l){
+      var cls = l.t==='ok'?'l-ok':l.t==='e'?'l-er':l.t==='am'?'l-am':'l-dim';
+      html += '<div class="'+cls+'">['+l.ts+'] '+escHtml(l.msg)+'</div>';
+    });
+    html += '</div>';
+  }
+
+  return html;
+}
+
+function renderResults(sel,flagged,skipped,summaries){
+  var html = '';
+
+  // email switcher
+  var emailIds = Object.keys(state.studies);
+  if(emailIds.length>1){
+    html += '<div style="display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap">';
+    emailIds.forEach(function(eid){
+      var em = state.emails.find(function(e){return e.id===eid;});
+      if(!em)return;
+      html += '<button class="btn'+(state.selEmail===eid?' g':'')+'" onclick="state.selEmail=\''+eid+'\';render()">'+escHtml(em.topic)+'</button>';
+    });
+    html += '</div>';
+  }
+
+  if(!state.selEmail||!sel.length){
+    return html+'<div class="empty"><div style="font-size:24px;margin-bottom:10px;opacity:0.3">◎</div><div style="font-size:12px;color:var(--t4)">'+(state.selEmail?'No studies yet.':'Run pass 1 on an email from inbox.')+'</div></div>';
+  }
+
+  // calibration hints
+  var scannedCount = state.emails.filter(function(e){return e.status==='scanned';}).length;
+  if(state.calMode&&scannedCount===1&&summaries.length===0){
+    html += '<div class="banner blue"><div style="font-size:15px;flex-shrink:0">💡</div><div class="banner-txt blue"><strong>Step 2:</strong> Review the flagged titles below. Thumbs up the ones that look useful, thumbs down ones that are not relevant. Then click Summarize on 2-3 to check the output format.</div></div>';
+  } else if(state.calMode&&summaries.length>0&&summaries.length<4){
+    html += '<div class="banner blue"><div style="font-size:15px;flex-shrink:0">💡</div><div class="banner-txt blue"><strong>Step 3:</strong> Check the Summaries tab. Does the format match your Google Doc style? Rate outputs with thumbs up or down, then go back to Inbox to scan more emails.</div></div>';
+  }
+
+  // tabs
+  html += '<div class="tabs">';
+  html += '<div class="tab'+(state.resultTab==='flagged'?' on':'')+'" onclick="setResultTab(\'flagged\')">Flagged titles <span class="tab-n">'+flagged.length+'</span></div>';
+  html += '<div class="tab'+(state.resultTab==='summaries'?' on':'')+'" onclick="setResultTab(\'summaries\')">Summaries <span class="tab-n">'+summaries.length+'</span></div>';
+  html += '<div class="tab'+(state.resultTab==='skipped'?' on':'')+'" onclick="setResultTab(\'skipped\')">Skipped <span class="tab-n">'+skipped.length+'</span></div>';
+  html += '</div>';
+
+  if(state.resultTab==='flagged'){
+    html += '<div style="font-size:11px;color:var(--t4);font-family:var(--mono);margin-bottom:12px;line-height:1.65">Thumbs up to approve for summarizing &middot; thumbs down to skip &middot; click Summarize to generate write-up &middot; check Skipped tab for studies Claude may have missed</div>';
+    if(flagged.length===0){
+      html += '<div class="empty"><div style="font-size:24px;margin-bottom:10px;opacity:0.3">◎</div><div style="font-size:12px;color:var(--t4)">No titles flagged yet. Run pass 1 from inbox.</div></div>';
+    } else {
+      flagged.forEach(function(s){html+=renderTitleCard(s,'flagged');});
+    }
+  }
+
+  if(state.resultTab==='summaries'){
+    html += '<div style="font-size:11px;color:var(--t4);font-family:var(--mono);margin-bottom:12px;line-height:1.65">Thumbs up or down on format trains Claude for next time</div>';
+    if(summaries.length===0){
+      html += '<div class="empty"><div style="font-size:24px;margin-bottom:10px;opacity:0.3">◎</div><div style="font-size:12px;color:var(--t4)">No summaries yet. Approve titles and click Summarize.</div></div>';
+    } else {
+      summaries.forEach(function(s){html+=renderSummaryCard(s);});
+    }
+  }
+
+  if(state.resultTab==='skipped'){
+    html += '<div style="font-size:11px;color:var(--t4);font-family:var(--mono);margin-bottom:12px;line-height:1.65">Safety net - every skipped title is here permanently. Thumbs up to restore and teach Claude it missed one.</div>';
+    if(skipped.length===0){
+      html += '<div class="empty"><div style="font-size:24px;margin-bottom:10px;opacity:0.3">◎</div><div style="font-size:12px;color:var(--t4)">Nothing skipped yet.</div></div>';
+    } else {
+      skipped.forEach(function(s){html+=renderTitleCard(s,'skipped');});
+    }
+  }
+
+  return html;
+}
+
+function renderTitleCard(s, tier){
+  var cls = 'tcard';
+  if(s.scanning) cls+=' scanning';
+  else if(tier==='skipped') cls+=' skipped';
+  else cls+=' flagged';
+
+  var html = '<div class="'+cls+'">';
+  html += '<div class="tc-main">';
+  html += '<div class="tc-title">'+escHtml(s.title)+'</div>';
+  if(s.scanning) html += '<div class="tc-reason" style="animation:sp 1s ease-in-out infinite;opacity:0.6">Scanning...</div>';
+  else if(s.p1reason) html += '<div class="tc-reason">→ '+escHtml(s.p1reason)+'</div>';
+  html += '</div>';
+  html += '<div class="tc-actions">';
+  if(s.p1score!=null&&!s.scanning) html += pill(s.p1score);
+
+  if(!s.scanning&&s.p1score!=null){
+    if(tier==='skipped'){
+      html += '<button class="fbb'+(s.titleFb==='up'?' up':'')+'" title="Restore and teach Claude" onclick="rescueFromSkip(\''+s.id+'\')">👍</button>';
+    } else {
+      html += '<div style="display:flex;gap:3px">';
+      html += '<button class="fbb'+(s.titleFb==='up'?' up':'')+'" title="Flag for summarizing" onclick="thumbUpTitle(\''+s.id+'\')">👍</button>';
+      html += '<button class="fbb'+(s.titleFb==='dn'?' dn':'')+'" title="Skip" onclick="thumbDownTitle(\''+s.id+'\')">👎</button>';
+      html += '</div>';
+      if((s.p1flag||s.titleFb==='up')&&!s.discarded&&!s.summarized&&!s.summarizing){
+        html += '<button class="btn g" style="font-size:10px;padding:3px 9px" onclick="doSummarize(\''+s.id+'\')">Summarize</button>';
+      }
+      if(s.summarizing) html += '<span style="font-size:10px;font-family:var(--mono);color:var(--amber)">Writing...</span>';
+      if(s.summarized) html += '<span style="font-size:10px;font-family:var(--mono);color:var(--green)">Done ✓</span>';
+    }
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function renderSummaryCard(s){
+  var cls = 'scard'+(s.summarized?' done':' loading');
+  var html = '<div class="'+cls+'">';
+  html += '<div class="sc-hdr"><div class="sc-title">'+escHtml(s.title)+'</div>';
+  if(s.finalScore!=null) html += pill(s.finalScore);
+  html += '</div>';
+  if(s.summarizing) html += '<div style="font-size:11px;color:var(--amber);font-family:var(--mono);margin-bottom:10px;opacity:0.7">Generating summary...</div>';
+  if(s.summary) html += '<div class="sc-body">'+escHtml(s.summary)+'</div>';
+  if(s.tags&&s.tags.length>0){
+    html += '<div class="sc-tags">';
+    s.tags.forEach(function(t){html+='<span class="tag">'+escHtml(t)+'</span>';});
+    html += '</div>';
+  }
+  html += '<div class="sc-footer">';
+  if(s.summarized&&!s.exported) html += '<button class="btn g" onclick="exportStudy(\''+s.id+'\')">Copy to doc</button>';
+  if(s.exported) html += '<span style="font-size:10px;color:var(--green);font-family:var(--mono)">Copied ✓</span>';
+  if(s.summarized) html += '<button class="btn" onclick="openEditModal(\''+s.id+'\')">Edit</button>';
+  html += '<button class="btn r" onclick="discardSummary(\''+s.id+'\')">Discard</button>';
+  html += '<div style="display:flex;gap:3px">';
+  html += '<button class="fbb'+(s.sumFb==='up'?' up':'')+'" title="Good format" onclick="summaryFb(\''+s.id+'\',\'up\')">👍</button>';
+  html += '<button class="fbb'+(s.sumFb==='dn'?' dn':'')+'" title="Poor format" onclick="summaryFb(\''+s.id+'\',\'dn\')">👎</button>';
+  html += '</div>';
+  if(s.doi) html += '<a href="https://doi.org/'+encodeURIComponent(s.doi)+'" target="_blank" style="margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--t4)">doi ↗</a>';
+  html += '</div></div>';
+  return html;
+}
+
+function renderTraining(){
+  var html = '<div style="background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:13px 15px;margin-bottom:16px;font-size:12px;color:var(--t3);line-height:1.75">';
+  html += 'Every thumbs up and down is saved here and injected into Claude\'s prompts automatically. Title feedback trains the Pass 1 scanner. Summary feedback trains the Pass 2 format. More examples means better accuracy over time.';
+  html += '</div>';
+
+  if(state.examples.length===0){
+    return html+'<div class="empty"><div style="font-size:24px;margin-bottom:10px;opacity:0.3">◎</div><div style="font-size:12px;color:var(--t4)">No examples yet. Rate titles and summaries with thumbs up or down.</div></div>';
+  }
+
+  var groups = [
+    {type:'good_flag',label:'Correctly flagged titles',cls:'p-g'},
+    {type:'bad_flag',label:'False positives',cls:'p-r'},
+    {type:'rescued_skip',label:'Rescued from skipped',cls:'p-blue'},
+    {type:'good_summary',label:'Good summary format',cls:'p-g'},
+    {type:'bad_summary',label:'Poor summary format',cls:'p-r'},
+  ];
+
+  groups.forEach(function(g){
+    var group = state.examples.filter(function(e){return e.type===g.type;});
+    if(!group.length)return;
+    html += '<div class="sh" style="margin-bottom:10px"><div class="sh-t">'+g.label+'</div><span class="pill '+g.cls+'">'+group.length+'</span><div class="sh-l"></div></div>';
+    group.forEach(function(ex){
+      html += '<div class="ex-card">';
+      html += '<span class="ex-rm" onclick="removeExample(\''+ex.id+'\')">remove</span>';
+      html += '<div class="ex-title">'+escHtml(ex.title)+'</div>';
+      html += '<div class="ex-meta">'+(ex.score!=null?'score '+ex.score+'/10 · ':'')+(new Date(ex.ts)).toLocaleDateString()+'</div>';
+      if(ex.output) html += '<div class="ex-out">'+escHtml(ex.output.slice(0,300))+'...</div>';
+      html += '</div>';
+    });
+  });
+
+  html += '<div style="margin-top:14px"><button class="btn r" onclick="if(confirm(\'Clear all training examples?\'))clearExamples()">Clear all</button></div>';
+  return html;
+}
+
+function renderSettings(){
+  var html = '<div class="tabs" style="margin-bottom:16px">';
+  html += '<div class="tab'+(state.settingsTab==='p1'?' on':'')+'" onclick="setSettingsTab(\'p1\')">Pass 1 — title screen</div>';
+  html += '<div class="tab'+(state.settingsTab==='p2'?' on':'')+'" onclick="setSettingsTab(\'p2\')">Pass 2 — summary format</div>';
+  html += '<div class="tab'+(state.settingsTab==='conn'?' on':'')+'" onclick="setSettingsTab(\'conn\')">Connections</div>';
+  html += '</div>';
+
+  if(state.settingsTab==='p1'){
+    html += '<div class="sc-card"><div class="sc-title">Pass 1 — title screening</div>';
+    html += '<div class="sc-sub">Runs once per email as a single batch call. Controls which titles get flagged. Edit to adjust scoring criteria or clinical focus.</div>';
+    html += '<div class="field"><div class="f-lbl">Prompt</div>';
+    html += '<textarea class="f-in f-ta" id="p1-draft" onchange="state.p1draft=this.value">'+escHtml(state.p1prompt)+'</textarea></div>';
+    html += '<div style="display:flex;gap:7px">';
+    html += '<button class="btn-run" onclick="saveP1()">Save</button>';
+    html += '<button class="btn" style="padding:7px 14px" onclick="resetP1()">Reset to default</button>';
+    html += '</div></div>';
+  }
+
+  if(state.settingsTab==='p2'){
+    html += '<div class="sc-card"><div class="sc-title">Pass 2 — summary format</div>';
+    html += '<div class="sc-sub">Runs per-study when you click Summarize. Controls the output format and clinical depth. Your training examples are appended automatically.</div>';
+    html += '<div class="field"><div class="f-lbl">Prompt</div>';
+    html += '<textarea class="f-in f-ta" id="p2-draft" onchange="state.p2draft=this.value">'+escHtml(state.p2prompt)+'</textarea></div>';
+    html += '<div style="display:flex;gap:7px">';
+    html += '<button class="btn-run" onclick="saveP2()">Save</button>';
+    html += '<button class="btn" style="padding:7px 14px" onclick="resetP2()">Reset to default</button>';
+    html += '</div></div>';
+  }
+
+  if(state.settingsTab==='conn'){
+    html += '<div class="sc-card"><div class="sc-title">API and export</div>';
+    html += '<div class="sc-sub">API key stored in your browser only — sent directly to Anthropic, never anywhere else.</div>';
+    html += '<div class="field"><div class="f-lbl">Anthropic API key</div>';
+    html += '<input class="f-in" type="password" value="'+escHtml(state.apiKey||'')+'" placeholder="sk-ant-api03-..." onchange="state.apiKey=this.value;lsSet(\'rd4_key\',this.value);render()"/></div>';
+    html += '<div class="field"><div class="f-lbl">Google Doc ID</div>';
+    html += '<input class="f-in" type="text" value="'+escHtml(state.docId||'')+'" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" onchange="state.docId=this.value;lsSet(\'rd4_doc\',this.value)"/>';
+    html += '<div class="f-hint">From docs.google.com/document/d/ID/edit - Export copies summary to clipboard and opens your doc.</div></div>';
+    html += '</div>';
+    html += '<div class="sc-card"><div class="sc-title">Gmail integration</div>';
+    html += '<div class="sc-sub" style="margin-bottom:0">Currently using demo abstracts matching your clinical model. To connect live Gmail, deploy with Google OAuth (Gmail read scope). PubMed sender: efalerts@ncbi.nlm.nih.gov. The Pass 1 batch call handles 20 titles in one round-trip — fast and inexpensive at scale.</div>';
+    html += '</div>';
+  }
+
+  return html;
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+function selectEmail(id){
+  state.selEmail = id;
+  if(state.studies[id]) state.view = 'results';
+  render();
+}
+
+function thumbUpTitle(id){
+  updateStudy(state.selEmail,id,{titleFb:'up',p1flag:true,discarded:false});
+  var study = (state.studies[state.selEmail]||[]).find(function(s){return s.id===id;});
+  if(study) addExample({id:id+'_tf',title:study.title,score:study.p1score,type:'good_flag',ts:new Date().toISOString()});
+  toast('Flagged — click Summarize to generate the write-up');
+  render();
+}
+
+function thumbDownTitle(id){
+  var study = (state.studies[state.selEmail]||[]).find(function(s){return s.id===id;});
+  updateStudy(state.selEmail,id,{titleFb:'dn',p1flag:false,discarded:true});
+  if(study) addExample({id:id+'_tf',title:study.title,score:study.p1score,type:study.p1flag?'bad_flag':'confirmed_skip',ts:new Date().toISOString()});
+  toast('Skipped — visible in Skipped tab, always restorable');
+  render();
+}
+
+function rescueFromSkip(id){
+  var study = (state.studies[state.selEmail]||[]).find(function(s){return s.id===id;});
+  updateStudy(state.selEmail,id,{discarded:false,p1flag:true,titleFb:'up'});
+  if(study) addExample({id:id+'_rescue_'+Date.now(),title:study.title,score:study.p1score,type:'rescued_skip',ts:new Date().toISOString()});
+  toast('Restored — Claude will learn to catch similar titles next time');
+  render();
+}
+
+function summaryFb(id,dir){
+  var study = (state.studies[state.selEmail]||[]).find(function(s){return s.id===id;});
+  updateStudy(state.selEmail,id,{sumFb:dir});
+  if(study) addExample({id:id+'_sf',title:study.title,output:study.summary,score:study.finalScore,type:dir==='up'?'good_summary':'bad_summary',ts:new Date().toISOString()});
+  toast(dir==='up'?'Format saved — Claude will match this style':'Saved — Claude will avoid this pattern');
+  render();
+}
+
+function exportStudy(id){
+  var study = (state.studies[state.selEmail]||[]).find(function(s){return s.id===id;});
+  if(!study)return;
+  if(navigator.clipboard) navigator.clipboard.writeText(study.summary||'').catch(function(){});
+  if(state.docId) window.open('https://docs.google.com/document/d/'+state.docId+'/edit','_blank');
+  updateStudy(state.selEmail,id,{exported:true});
+  toast(state.docId?'Copied — Google Doc opened':'Copied to clipboard. Add Doc ID in Settings to open doc automatically.');
+  render();
+}
+
+function discardSummary(id){
+  updateStudy(state.selEmail,id,{discarded:true});
+  render();
+}
+
+function removeExample(id){
+  state.examples = state.examples.filter(function(e){return e.id!==id;});
+  lsSet('rd4_ex',state.examples);
+  render();
+}
+
+function clearExamples(){
+  state.examples = [];
+  lsSet('rd4_ex',[]);
+  render();
+}
+
+function saveP1(){
+  var el = document.getElementById('p1-draft');
+  if(el){state.p1prompt=el.value;lsSet('rd4_p1',el.value);}
+  toast('Pass 1 prompt saved');
+}
+function resetP1(){
+  state.p1prompt=P1_DEFAULT();lsSet('rd4_p1',state.p1prompt);
+  toast('Reset to default');render();
+}
+function saveP2(){
+  var el = document.getElementById('p2-draft');
+  if(el){state.p2prompt=el.value;lsSet('rd4_p2',el.value);}
+  toast('Pass 2 prompt saved');
+}
+function resetP2(){
+  state.p2prompt=P2_DEFAULT();lsSet('rd4_p2',state.p2prompt);
+  toast('Reset to default');render();
+}
+
+function escHtml(s){
+  if(!s)return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Boot
+document.getElementById('api-key-input').value = state.apiKey||'';
+render();
+</script>
+</body>
+</html>
